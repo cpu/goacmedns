@@ -84,7 +84,7 @@ initial ACME-DNS account creation and CNAME delegation ahead of time  The
 `goacmedns-register` command line utility provides an easy way to do this:
 
      go install github.com/cpu/goacmedns/...
-     goacmedns-register -api http://10.0.0.1:4443 -domain example.org -storage /tmp/example.storage.json
+     goacmedns-register -api http://10.0.0.1:4443 -domain example.com -storage /tmp/example.storage.json
 
 This will register an account for `example.com` with the ACME-DNS server at
 `http://10.0.0.1:4443`, saving the account details in
