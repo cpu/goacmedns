@@ -12,6 +12,17 @@ func main() {
 	apiBase := flag.String("api", "", "ACME-DNS server API URL")
 	domain := flag.String("domain", "", "Domain to register an account for")
 	storagePath := flag.String("storage", "", "Path to the JSON storage file to create/update")
+	flag.Parse()
+
+	if *apiBase == "" {
+		log.Fatal("You must provide a non-empty -api flag")
+	}
+	if *domain == "" {
+		log.Fatal("You must provide a non-empty -domain flag")
+	}
+	if *storagePath == "" {
+		log.Fatal("You must provide a non-empty -storage flag")
+	}
 
 	client := goacmedns.NewClient(*apiBase)
 	storage := goacmedns.NewFileStorage(*storagePath, 0600)
