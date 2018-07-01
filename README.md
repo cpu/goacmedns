@@ -76,7 +76,3 @@ func main() {
 	}
 }
 ```
-
-# TODO
-
-1. Godoc documentation
