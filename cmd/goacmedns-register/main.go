@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 
 	"github.com/cpu/goacmedns"
@@ -41,9 +40,9 @@ func main() {
 		log.Fatalf("Failed to save storage: %v", err)
 	}
 
-	fmt.Printf(
+	log.Printf(
 		"new account created for %q. "+
-			"To complete setup for %q you must provision the following CNAME in your DNS zone:"+
-			"%s CNAME %s.",
+			"To complete setup for %q you must provision the following CNAME in your DNS zone:\n"+
+			"%s CNAME %s.\n",
 		*domain, *domain, "_acme-challenge."+*domain, newAcct.FullDomain)
 }
