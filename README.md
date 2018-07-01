@@ -89,4 +89,4 @@ initial ACME-DNS account creation and CNAME delegation ahead of time  The
 This will register an account for `example.com` with the ACME-DNS server at
 `http://10.0.0.1:4443`, saving the account details in
 `/tmp/example.storage.json` and printing the required CNAME record for the
-`example.org` DNS zone to stdout.
+`example.com` DNS zone to stdout.
