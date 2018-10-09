@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"strings"
 
 	"github.com/cpu/goacmedns"
 )
@@ -11,6 +12,7 @@ func main() {
 	apiBase := flag.String("api", "", "ACME-DNS server API URL")
 	domain := flag.String("domain", "", "Domain to register an account for")
 	storagePath := flag.String("storage", "", "Path to the JSON storage file to create/update")
+	allowFrom := flag.String("allowFrom", "", "List of comma separated CIDR notation networks the account is allowed to be used from")
 	flag.Parse()
 
 	if *apiBase == "" {
@@ -23,10 +25,15 @@ func main() {
 		log.Fatal("You must provide a non-empty -storage flag")
 	}
 
+	var allowedNetworks []string
+	if *allowFrom != "" {
+		allowedNetworks = strings.Split(*allowFrom, ",")
+	}
+
 	client := goacmedns.NewClient(*apiBase)
 	storage := goacmedns.NewFileStorage(*storagePath, 0600)
 
-	newAcct, err := client.RegisterAccount(nil)
+	newAcct, err := client.RegisterAccount(allowedNetworks)
 	if err != nil {
 		log.Fatal(err)
 	}
