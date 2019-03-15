@@ -3,7 +3,7 @@ language: go
 sudo: false
 
 go:
-  - "1.10.3"
+  - "stable"
 
 install:
   - go get golang.org/x/tools/cmd/cover
