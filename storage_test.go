@@ -49,6 +49,9 @@ func TestNewFileStorage(t *testing.T) {
 	}
 
 	f, err := ioutil.TempFile("", "acmedns.account")
+	if err != nil {
+		t.Errorf("unexpected error creating tempfile: %v", err)
+	}
 	defer func() { _ = f.Close() }()
 
 	_, err = f.Write(testData)
