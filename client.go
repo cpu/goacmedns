@@ -29,6 +29,7 @@ var (
 	// httpClient is a `http.Client` that is customized with the `defaultTimeout`
 	httpClient = http.Client{
 		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
 			Dial: (&net.Dialer{
 				Timeout:   defaultTimeout,
 				KeepAlive: defaultTimeout,
