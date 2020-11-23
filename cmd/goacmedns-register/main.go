@@ -18,9 +18,11 @@ func main() {
 	if *apiBase == "" {
 		log.Fatal("You must provide a non-empty -api flag")
 	}
+
 	if *domain == "" {
 		log.Fatal("You must provide a non-empty -domain flag")
 	}
+
 	if *storagePath == "" {
 		log.Fatal("You must provide a non-empty -storage flag")
 	}
@@ -42,6 +44,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to put account in storage: %v", err)
 	}
+
 	err = storage.Save()
 	if err != nil {
 		log.Fatalf("Failed to save storage: %v", err)

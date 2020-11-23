@@ -1,7 +1,8 @@
-package goacmedns
+package goacmedns //nolint:testpackage
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -36,9 +37,11 @@ func TestNewFileStorage(t *testing.T) {
 	if fs.path != path {
 		t.Errorf("expected fs.path = %q, got %q", path, fs.path)
 	}
+
 	if fs.mode != mode {
 		t.Errorf("expected fs.mode = %d, got %d", mode, fs.mode)
 	}
+
 	if fs.accounts == nil {
 		t.Error("expected accounts to be not-nil, was nil")
 	}
@@ -52,6 +55,7 @@ func TestNewFileStorage(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error creating tempfile: %v", err)
 	}
+
 	defer func() { _ = f.Close() }()
 
 	_, err = f.Write(testData)
@@ -60,13 +64,16 @@ func TestNewFileStorage(t *testing.T) {
 	}
 
 	storage = NewFileStorage(f.Name(), mode)
+
 	fs, ok = storage.(fileStorage)
 	if !ok {
 		t.Fatalf("expected fileStorage instance from NewFileStorage, got %T", storage)
 	}
+
 	if fs.accounts == nil {
 		t.Fatalf("expected accounts to be not-nil, was nil")
 	}
+
 	if !reflect.DeepEqual(fs.accounts, testAccounts) {
 		t.Errorf("expected to have accounts %#v loaded, had %#v", testAccounts, fs.accounts)
 	}
@@ -74,6 +81,7 @@ func TestNewFileStorage(t *testing.T) {
 
 func TestFileStorageSave(t *testing.T) {
 	f, err := ioutil.TempFile("", "acmedns.account")
+
 	defer func() { _ = f.Close() }()
 
 	if err != nil {
@@ -100,6 +108,7 @@ func TestFileStorageSave(t *testing.T) {
 	}
 
 	var restoredData map[string]Account
+
 	err = json.Unmarshal(storedJSON, &restoredData)
 	if err != nil {
 		t.Fatalf("unexpected error unmarshaling stored JSON from %q: %v", f.Name(), err)
@@ -126,13 +135,14 @@ func TestFileStorageFetch(t *testing.T) {
 		if err != nil {
 			t.Errorf("unexpected error fetching domain %q from storage: %v", d, err)
 		}
+
 		if !reflect.DeepEqual(acct, expected) {
 			t.Errorf("expected domain %q to have account %#v, had %#v\n", d, expected, acct)
 		}
 	}
 
 	_, err := storage.Fetch("doesnt-exist.example.org")
-	if err != ErrDomainNotFound {
+	if !errors.Is(err, ErrDomainNotFound) {
 		t.Errorf("expected ErrDomainNotFound for Fetch of non-existent domain, got %v", err)
 	}
 }

@@ -1,7 +1,8 @@
-package goacmedns
+package goacmedns //nolint:testpackage
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -29,28 +30,36 @@ func newRegHandler(t *testing.T, expectedAllowFrom []string) func(http.ResponseW
 		if ct := req.Header.Get("Content-Type"); ct != expectedCT {
 			t.Errorf("expected Content-Type %q got %q", expectedCT, ct)
 		}
+
 		if ua := req.Header.Get("User-Agent"); ua != userAgent() {
 			t.Errorf("expected User-Agent %q got %q", userAgent(), ua)
 		}
+
 		if len(expectedAllowFrom) > 0 {
 			decoder := json.NewDecoder(req.Body)
+
 			var regReq struct {
 				AllowFrom []string
 			}
+
 			err := decoder.Decode(&regReq)
 			if err != nil {
 				t.Fatalf("error decoding request body JSON: %v", err)
 			}
+
 			if !reflect.DeepEqual(regReq.AllowFrom, expectedAllowFrom) {
 				t.Errorf("expected AllowFrom %#v, got %#v", expectedAllowFrom, regReq.AllowFrom)
 			}
 		}
+
 		resp.WriteHeader(http.StatusCreated)
+
 		newRegBody, _ := json.Marshal(testAcct)
 		_, _ = resp.Write(newRegBody)
 	}
 }
 
+//nolint:funlen
 func TestRegisterAccount(t *testing.T) {
 	testAllowFrom := []string{"space", "earth"}
 
@@ -84,6 +93,7 @@ func TestRegisterAccount(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		//nolint:nestif
 		t.Run(tc.Name, func(t *testing.T) {
 			mux := http.NewServeMux()
 			mux.HandleFunc("/register", tc.RegisterHandler)
@@ -99,10 +109,11 @@ func TestRegisterAccount(t *testing.T) {
 			} else if tc.ExpectedErr != nil && err == nil {
 				t.Errorf("expected error %v, got nil", tc.ExpectedErr)
 			} else if tc.ExpectedErr != nil && err != nil {
-				if cErr, ok := err.(ClientError); !ok {
+				var cErr ClientError
+				if ok := errors.As(err, &cErr); !ok {
 					t.Fatalf("expected ClientError from RegisterAccount. Got %v", err)
 				} else if !reflect.DeepEqual(cErr, *tc.ExpectedErr) {
-					t.Errorf("expected err %#v, got %#v\n", tc.ExpectedErr, cErr)
+					t.Errorf("expected err %#v, got %#v\n", tc.ExpectedErr, err)
 				}
 			} else if tc.ExpectedErr == nil && err == nil {
 				if !reflect.DeepEqual(acct, *tc.ExpectedAccount) {
@@ -123,32 +134,41 @@ func updateTXTHandler(t *testing.T) func(http.ResponseWriter, *http.Request) {
 		if ct := req.Header.Get("Content-Type"); ct != expectedCT {
 			t.Errorf("expected Content-Type %q got %q", expectedCT, ct)
 		}
+
 		if ua := req.Header.Get("User-Agent"); ua != userAgent() {
 			t.Errorf("expected User-Agent %q got %q", userAgent(), ua)
 		}
+
 		if key := req.Header.Get("X-Api-Key"); key != testAcct.Password {
 			t.Errorf("expected X-Api-Key %q got %q", testAcct.Password, key)
 		}
+
 		if user := req.Header.Get("X-Api-User"); user != testAcct.Username {
 			t.Errorf("expected X-Api-User %q got %q", testAcct.Username, user)
 		}
+
 		decoder := json.NewDecoder(req.Body)
+
 		var updateReq struct {
 			SubDomain string
 			Txt       string
 		}
+
 		err := decoder.Decode(&updateReq)
 		if err != nil {
 			t.Fatalf("error decoding request body JSON: %v", err)
 		}
+
 		if updateReq.SubDomain != testAcct.SubDomain {
 			t.Errorf("expected update req to have SubDomain %q, had %q",
 				testAcct.SubDomain, updateReq.SubDomain)
 		}
+
 		if updateReq.Txt != updateValue {
 			t.Errorf("expected update req to have Txt %q, had %q",
 				updateValue, updateReq.Txt)
 		}
+
 		resp.WriteHeader(http.StatusOK)
 		_, _ = resp.Write([]byte(`{}`))
 	}
@@ -193,7 +213,8 @@ func TestUpdateTXTRecord(t *testing.T) {
 			} else if tc.ExpectedErr != nil && err == nil {
 				t.Errorf("expected error %v, got nil", tc.ExpectedErr)
 			} else if tc.ExpectedErr != nil && err != nil {
-				if cErr, ok := err.(ClientError); !ok {
+				var cErr ClientError
+				if ok := errors.As(err, &cErr); !ok {
 					t.Fatalf("expected ClientError from UpdateTXTRecord. Got %v", err)
 				} else if !reflect.DeepEqual(cErr, *tc.ExpectedErr) {
 					t.Errorf("expected err %#v, got %#v\n", tc.ExpectedErr, cErr)
