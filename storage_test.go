@@ -15,7 +15,18 @@ var testAccounts = map[string]Account{
 		SubDomain:  "tossed.lettuceencrypt.org",
 		Username:   "cpu",
 		Password:   "hunter2",
+		ServerURL:  "https://auth.acme-dns.io",
 	},
+	"threeletter.agency": {
+		FullDomain: "threeletter.agency",
+		SubDomain:  "jobs.threeletter.agency",
+		Username:   "spooky.mulder",
+		Password:   "trustno1",
+		ServerURL:  "https://example.org",
+	},
+}
+
+var testLegacyAccount = map[string]Account{
 	"threeletter.agency": {
 		FullDomain: "threeletter.agency",
 		SubDomain:  "jobs.threeletter.agency",
@@ -76,6 +87,66 @@ func TestNewFileStorage(t *testing.T) {
 
 	if !reflect.DeepEqual(fs.accounts, testAccounts) {
 		t.Errorf("expected to have accounts %#v loaded, had %#v", testAccounts, fs.accounts)
+	}
+}
+
+func TestNewFileStorageWithLegacyData(t *testing.T) {
+	mode := os.FileMode(0600)
+
+	var (
+		legacyAcct, testAcct Account
+		found                bool
+	)
+
+	testData, err := json.Marshal(testLegacyAccount)
+	if err != nil {
+		t.Fatalf("unexpected error marshaling testAccounts: %v", err)
+	}
+
+	f, err := ioutil.TempFile("", "legacy.account")
+	if err != nil {
+		t.Errorf("unexpected error creating tempfile: %v", err)
+	}
+
+	defer func() { _ = f.Close() }()
+
+	_, err = f.Write(testData)
+	if err != nil {
+		t.Errorf("unexpected error writing to tempfile: %v", err)
+	}
+
+	storage := NewFileStorage(f.Name(), mode)
+
+	fs, ok := storage.(fileStorage)
+	if !ok {
+		t.Fatalf("expected fileStorage instance from NewFileStorage, got %T", storage)
+	}
+
+	if fs.accounts == nil {
+		t.Fatalf("expected accounts to be not-nil, was nil")
+	}
+
+	if len(fs.accounts) != 1 {
+		t.Fatalf("expected a single account in the map, got %d", len(fs.accounts))
+	}
+
+	if legacyAcct, found = fs.accounts["threeletter.agency"]; !found {
+		t.Fatalf("expected to find account but was unable to")
+	}
+
+	if legacyAcct.ServerURL != "" {
+		t.Errorf("expected empty Server string from legacy account, but got %s", legacyAcct.ServerURL)
+	}
+
+	if testAcct, found = testAccounts["threeletter.agency"]; !found {
+		t.Fatalf("expected to find test account for threeletter.agency, but was unable to")
+	}
+
+	// set the missing value for legacy account to be able to evaluate equivalence
+	legacyAcct.ServerURL = testAcct.ServerURL
+
+	if !reflect.DeepEqual(legacyAcct, testAcct) {
+		t.Errorf("expected equivalent test and legacy accounts")
 	}
 }
 
